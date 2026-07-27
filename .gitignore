@@ -1,0 +1,31 @@
+# Visual Studio
+.vs/
+
+# Build folders
+Debug/
+Release/
+x64/
+x86/
+out/
+build/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+
+# Rider
+.idea/
+
+# User-specific files
+*.user
+*.VC.db
+*.opendb
+
+# Executables
+*.exe
+*.dll
+*.pdb
+
+# Temporary
+*.obj
+*.ipch
