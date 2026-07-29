@@ -2,6 +2,8 @@
 #include <boost/asio.hpp>
 #include <iostream>
 
+#include "Server.h"
+
 int main()
 {
     std::string address;
@@ -9,16 +11,16 @@ int main()
 
     try
     {
-        std::ifstream configFile("server.conf");
+        std::ifstream config_file("server.conf");
 
-        if (!configFile.is_open())
+        if (!config_file.is_open())
         {
             throw std::runtime_error("Could not open server.conf");
         }
 
         std::string line;
 
-        while (std::getline(configFile, line))
+        while (std::getline(config_file, line))
         {
             const std::size_t separation_position = line.find("=");
 
@@ -45,34 +47,9 @@ int main()
         std::cerr << e.what() << std::endl;
     }
 
-    boost::asio::io_context io_context;
-
-    boost::asio::ip::tcp::endpoint endpoint(
-        boost::asio::ip::make_address(address),
-        port
-    );
-
-    boost::asio::ip::tcp::acceptor acceptor(io_context, endpoint);
-
-    std::cout << "Server is waiting on port 5000...\n";
-
-    boost::asio::ip::tcp::socket socket(io_context);
-
-    acceptor.accept(socket);
-
-    std::cout << "Client connected.\n";
-
-    std::array<char, 5> buffer;
-
-    boost::asio::read(socket, boost::asio::buffer(buffer));
-
-    std::string message(buffer.begin(), buffer.end());
-
-    std::cout << "Received " << message << '\n';
-
-    std::string reply = "Welcome";
-
-    boost::asio::write(socket, boost::asio::buffer(reply));
+    Server server(address, port);
 
     return 0;
 };
+
+
