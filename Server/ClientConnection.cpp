@@ -5,7 +5,23 @@
 
 ClientConnection::ClientConnection(boost::asio::ip::tcp::socket&& socket): websocket(std::move(socket))
 {
-    auto ip = socket.remote_endpoint().address().to_string();
+    boost::system::error_code error;
+
+    const auto endpoint = websocket.next_layer().remote_endpoint(error);
+
+    if (error)
+    {
+        std::cerr
+            << "Could not get client endpoint: "
+            << error.message()
+            << '\n';
+
+        return;
+    }
+
+    const auto ip = endpoint.address().to_string();
+
+    std::cout << "Client connected: " << ip << '\n';
 }
 
 void ClientConnection::Start()
