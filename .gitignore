@@ -8,6 +8,7 @@ x64/
 x86/
 out/
 build/
+cmake-build-*/
 
 # CMake
 CMakeFiles/
