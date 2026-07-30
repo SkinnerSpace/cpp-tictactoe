@@ -1,6 +1,15 @@
 ﻿#include <fstream>
 #include <boost/asio.hpp>
 #include <iostream>
+#include <boost/beast/websocket/stream.hpp>
+
+#include "ClientConnection.h"
+namespace beast = boost::beast;
+namespace websocket = beast::websocket;
+namespace net = boost::asio;
+using tcp = net::ip::tcp;
+
+
 #include "../Shared/PacketSerializer.h"
 
 int main()
@@ -48,72 +57,12 @@ int main()
 
     boost::asio::io_context io_context;
 
-    boost::asio::ip::tcp::socket socket(io_context);
-
-    boost::asio::ip::tcp::endpoint endpoint(
-        boost::asio::ip::make_address(address),
-        port
-    );
-
-    socket.connect(endpoint);
-
-    std::cout << "Connected to server.\n";
+    ClientConnection client_connection(io_context);
 
     std::string welcome_message = "Connected";
 
     Packet packet{PacketType::Message};
     packet.payload.assign(welcome_message.begin(), welcome_message.end());
-    packet.length = packet.payload.size();
 
-    auto serialized_packet = PacketSerializer::serialize(packet);
-
-    boost::asio::write(socket, boost::asio::buffer(serialized_packet));
-
-    while (true)
-    {
-        Packet packet;
-
-        boost::system::error_code error;
-
-        boost::asio::read(
-            socket,
-            boost::asio::buffer(&packet.length, sizeof(packet.length)),
-            error
-        );
-
-        if (error == boost::asio::error::eof)
-        {
-            std::cout << "Server is unavailable.\n";
-            break;
-        }
-
-        if (error)
-        {
-            std::cout << "Read error: " << error.message() << "\n";
-            break;
-        }
-
-        boost::asio::read(
-            socket,
-            boost::asio::buffer(&packet.type, sizeof(packet.type)));
-
-        boost::asio::read(
-            socket,
-            boost::asio::buffer(packet.payload.data(), packet.payload.size()));
-
-        packet.payload.resize(packet.length);
-
-        boost::asio::read(
-            socket, boost::asio::buffer(packet.payload)
-        );
-
-        if (packet.type == PacketType::Disconnect)
-        {
-            break;
-        }
-    }
-
-    socket.close();
-
-    return 0;
+    client_connection.Send(packet);
 }

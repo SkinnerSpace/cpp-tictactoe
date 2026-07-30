@@ -7,6 +7,6 @@
 class PacketSerializer
 {
     public:
-        static std::vector<std::uint8_t> serialize(const Packet& packet);
-        static Packet deserialize(const std::vector<std::uint8_t>& bytes);
+        static std::vector<std::uint8_t> Serialize(const Packet& packet);
+        static Packet Deserialize(const std::vector<std::uint8_t>& bytes);
 };

@@ -7,6 +7,10 @@
 
 class Server
 {
+public:
+    Server();
+    void Run();
+
 private:
     int _port;
     std::string _address;
@@ -16,7 +20,5 @@ private:
 
     std::vector<::std::shared_ptr<ClientConnection>> connections;
 
-public:
-    Server(std::string address, unsigned short port);
-    void Run();
+    unsigned short GetPort();
 };

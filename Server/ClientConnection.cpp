@@ -3,55 +3,50 @@
 #include <boost/asio.hpp>
 #include "../Shared/PacketSerializer.h"
 
-ClientConnection::ClientConnection(boost::asio::ip::tcp::socket&& socket): _socket(std::move(socket))
+ClientConnection::ClientConnection(boost::asio::ip::tcp::socket&& socket): websocket(std::move(socket))
 {
-    auto ip = _socket.remote_endpoint().address().to_string();
+    auto ip = socket.remote_endpoint().address().to_string();
 }
 
 void ClientConnection::Start()
 {
+    boost::system::error_code error;
+
+    websocket.accept(error);
+
+    if (error)
+    {
+        std::cout << "Handshake failed: "
+                  << error.message() << "\n";
+        return;
+    }
+
+    beast::flat_buffer buffer;
+
     while (true)
     {
-        Packet packet;
+        websocket.read(buffer, error);
 
-        boost::system::error_code error;
-
-        boost::asio::read(
-            socket,
-            boost::asio::buffer(&packet.length, sizeof(packet.length)),
-            error
-        );
-
-        if (error == boost::asio::error::eof)
+        if (error == websocket::error::closed)
         {
-            std::cout << "Client disconnected.\n";
+            std::cout << "Client closed the WebSocket connection.\n";
             break;
         }
 
         if (error)
         {
-            std::cout << "Read error: " << error.message() << "\n";
+            std::cout << "WebSocket read error: " << error.message() << '\n';
             break;
         }
 
-        boost::asio::read(
-            socket,
-            boost::asio::buffer(&packet.type, sizeof(packet.type)));
-
-        boost::asio::read(
-            socket,
-            boost::asio::buffer(packet.payload.data(), packet.payload.size()));
-
-        packet.payload.resize(packet.length);
-
-        boost::asio::read(
-            socket, boost::asio::buffer(packet.payload)
+        std::vector<uint8_t> bytes(
+            boost::asio::buffers_begin(buffer.data()),
+            boost::asio::buffers_end(buffer.data())
         );
 
-        if (packet.type == PacketType::Disconnect)
-        {
-            break;
-        }
+        buffer.consume(buffer.size());
+
+        auto packet = PacketSerializer::Deserialize(bytes);
     }
 }
 

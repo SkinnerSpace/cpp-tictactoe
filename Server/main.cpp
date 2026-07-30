@@ -47,7 +47,7 @@ int main()
         std::cerr << e.what() << std::endl;
     }
 
-    Server server(address, port);
+    Server server();
 
     return 0;
 };

@@ -1,16 +1,30 @@
 ﻿#include "Server.h"
+
 #include <iostream>
 #include <boost/asio.hpp>
 #include "../Shared/PacketSerializer.h"
 
-Server::Server(std::string address, unsigned short port): acceptor(io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::make_address(address), port))
+Server::Server(): acceptor(io_context)
 {
-    _address = address;
-    _port = port;
 }
 
 void Server::Run()
 {
+    const auto port = GetPort();
+
+    const boost::asio::ip::tcp::endpoint endpoint(
+            boost::asio::ip::tcp::v4(),
+            port
+        );
+
+    acceptor.open(endpoint.protocol());
+    acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+    acceptor.bind(endpoint);
+    acceptor.listen();
+
+    std::cout << "Server listening on 0.0.0.0:"
+              << port << '\n';
+
     while (true)
     {
         boost::asio::ip::tcp::socket socket(io_context);
@@ -23,31 +37,16 @@ void Server::Run()
 
         connection->Start();
     }
+}
 
-    boost::asio::io_context io_context;
+unsigned short Server::GetPort()
+{
+    const char* port_value = std::getenv("PORT");
 
-    boost::asio::ip::tcp::endpoint endpoint(
-        boost::asio::ip::make_address(_address),
-        _port
-    );
+    if (port_value != nullptr)
+    {
+        return static_cast<unsigned short>(std::stoi(port_value));
+    }
 
-    std::cout << "Server is waiting on port 5000...\n";
-
-    boost::asio::ip::tcp::socket socket(io_context);
-
-    acceptor.accept(socket);
-
-    std::cout << "Client connected.\n";
-
-    std::string welcome_message = "Welcome";
-
-    Packet packet{PacketType::Message};
-    packet.payload.assign(welcome_message.begin(), welcome_message.end());
-    packet.length = packet.payload.size();
-
-    auto serialized_packet = PacketSerializer::serialize(packet);
-
-    boost::asio::write(socket, boost::asio::buffer(serialized_packet));
-
-    socket.close();
+    return 5000;
 }
