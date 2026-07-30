@@ -57,7 +57,9 @@ int main()
 
     boost::asio::io_context io_context;
 
-    ClientConnection client_connection(io_context);
+    ClientConnection client_connection{io_context};
+
+    client_connection.Connect(address, port);
 
     std::string welcome_message = "Connected";
 

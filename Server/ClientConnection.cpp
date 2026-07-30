@@ -47,6 +47,10 @@ void ClientConnection::Start()
         buffer.consume(buffer.size());
 
         auto packet = PacketSerializer::Deserialize(bytes);
+
+        std::string text(packet.payload.begin(), packet.payload.end());
+
+        std::cout << text << std::endl;
     }
 }
 
