@@ -11,6 +11,8 @@ std::vector<std::uint8_t> PacketSerializer::Serialize(const Packet& packet)
     bytes.push_back(static_cast<std::uint8_t>(packet.type));
 
     bytes.insert(bytes.end(), packet.payload.begin(), packet.payload.end());
+
+    return bytes;
 }
 
 Packet PacketSerializer::Deserialize(const std::vector<std::uint8_t>& bytes)
